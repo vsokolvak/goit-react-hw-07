@@ -1,36 +1,41 @@
-import { useMemo } from "react";
-import { deleteContact, selectContacts } from "../../redux/contactsSlice";
-import { selectNameFilter } from "../../redux/filtersSlice";
+import { useEffect } from "react";
 import Contact from "../Contact/Contact";
 import style from "./ContactList.module.css";
 import { useDispatch, useSelector } from "react-redux";
+import { selectContacts, selectError, selectFilteredContacts, selectLoading } from "../../redux/contacts/contactsSlice";
+import { deleteContactById, getContats } from "../../redux/contacts/contactsOps";
 
 function ContactList () {
 
   const contactsData = useSelector(selectContacts)
-  const filterName = useSelector(selectNameFilter)
+  const loadingContacts = useSelector(selectLoading)
+  const errorGetContacts = useSelector(selectError)
+  const filteredContacts = useSelector(selectFilteredContacts)
 
   const dispatch = useDispatch()
 
-  const deleteContactt = (id) => {
-    dispatch(deleteContact(id));
+    useEffect(() => {
+      dispatch(getContats());
+    }, []);
+
+  const deleteContact = (id) => {
+    dispatch(deleteContactById(id));
   };
 
-  const filterData = useMemo( () => {
-    return contactsData.filter((el) =>
-      el.name.toLowerCase().includes(filterName.toLowerCase())
-    )},
-    [filterName, contactsData]
-  );
-
   return (
-    <ul className={style.contactList}>
-      {filterData.map((el) => (
-        <li key={el.id}>
-          <Contact contact={el} deleteContact={deleteContactt} />
-        </li>
-      ))}
-    </ul>
+    <>
+      {loadingContacts && <span>Loading ...</span>}
+      {errorGetContacts && <span>Sometime wrong, please reload page</span>}
+      {contactsData.length > 0 && !loadingContacts && (
+        <ul className={style.contactList}>
+          {filteredContacts.map((el) => (
+            <li key={el.id}>
+              <Contact contact={el} deleteContact={deleteContact} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
